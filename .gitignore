@@ -1,0 +1,5 @@
+venv/
+.env
+cache.db
+app.wsgi
+.idea/
