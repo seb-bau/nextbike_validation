@@ -4,6 +4,7 @@ import sqlite3
 from dotenv import load_dotenv
 from datetime import datetime
 from func_openwowi import *
+from func_helpers import trim_contract_idnum
 
 
 def preload_contractors():
@@ -45,7 +46,7 @@ def preload_contractors():
                 continue
 
         query = f"INSERT INTO contractors (lastname, firstname, contract_idnum) VALUES (?, ?, ?)"
-        query_args = (lastname, firstname, contract_idnum)
+        query_args = (lastname, firstname, trim_contract_idnum(contract_idnum))
         cur.execute(query, query_args)
         con.commit()
 

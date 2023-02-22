@@ -3,6 +3,7 @@ import sqlite3
 
 from flask import Flask, request, redirect
 from dotenv import load_dotenv
+from .func_helpers import trim_contract_idnum
 
 app = Flask(__name__)
 load_dotenv(os.path.join(app.root_path, '.env'))
@@ -15,16 +16,16 @@ def redirect_request():
 
 @app.route('/nextbike/v1/validate')
 def validate_request():
-    nachname = request.args.get("lastname", "")
     contract_idnum = request.args.get("contract", "")
-    if len(nachname) == 0 or len(contract_idnum) == 0:
+    contract_idnum = trim_contract_idnum(contract_idnum)
+    if len(contract_idnum) == 0:
         return "Arguments_missing", 400
     else:
         db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "cache.db")
         con = sqlite3.connect(db_path)
         cur = con.cursor()
-        query = "SELECT 1 FROM contractors WHERE lower(lastname)=? AND contract_idnum=? LIMIT 1"
-        query_args = (nachname.lower(), contract_idnum)
+        query = "SELECT 1 FROM contractors WHERE contract_idnum=? LIMIT 1"
+        query_args = contract_idnum
         cur.execute(query, query_args)
         rows = cur.fetchall()
         if len(rows) > 0:

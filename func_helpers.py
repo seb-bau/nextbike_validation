@@ -18,3 +18,9 @@ def random_string(number_of_characters=6, without_punctuation=True):
         characters = string.ascii_letters + string.digits + string.punctuation
     t_random_string = ''.join(random.choice(characters) for _ in range(number_of_characters))
     return t_random_string
+
+
+def trim_contract_idnum(input_contract):
+    ret_contract = ''.join(filter(str.isdigit, input_contract))
+    ret_contract = ret_contract.lstrip('0')
+    return ret_contract
