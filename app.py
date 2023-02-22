@@ -3,7 +3,7 @@ import sqlite3
 
 from flask import Flask, request, redirect
 from dotenv import load_dotenv
-from .func_helpers import trim_contract_idnum
+from func_helpers import trim_contract_idnum
 
 app = Flask(__name__)
 load_dotenv(os.path.join(app.root_path, '.env'))
