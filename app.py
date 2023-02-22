@@ -25,7 +25,7 @@ def validate_request():
         con = sqlite3.connect(db_path)
         cur = con.cursor()
         query = "SELECT 1 FROM contractors WHERE contract_idnum=? LIMIT 1"
-        query_args = contract_idnum
+        query_args = tuple(contract_idnum)
         cur.execute(query, query_args)
         rows = cur.fetchall()
         if len(rows) > 0:
