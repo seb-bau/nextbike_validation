@@ -29,8 +29,10 @@ def validate_request():
         cur.execute(query, query_args)
         rows = cur.fetchall()
         if len(rows) > 0:
+            print(f"nextbike_access: {contract_idnum} is valid. Caller {request.remote_addr}")
             return "valid", 200
         else:
+            print(f"nextbike_access: {contract_idnum} IS INVALID. Caller {request.remote_addr}")
             return "user not found", 404
 
 
