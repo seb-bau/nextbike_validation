@@ -76,7 +76,7 @@ def openwowi_get_contract(base_url, token, api_key, contract_idnum):
 
 @app.route('/')
 def redirect_request():
-    return redirect(os.environ.get("redirect_url"), code=302)
+    return redirect(settings.get("redirect_url"), code=302)
 
 
 @app.route('/nextbike/v1/validate')
@@ -113,7 +113,7 @@ def check_api_key():
     headers = request.headers
     key = headers.get("Authorization", "")
     if len(key) > 0:
-        expected_key = os.environ.get("api_key", "")
+        expected_key = settings.get("api_key", "")
         if len(expected_key) > 0:
             if key != f"Bearer {expected_key}":
                 return "Unauthorized", 401
