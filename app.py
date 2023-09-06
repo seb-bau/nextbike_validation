@@ -1,13 +1,35 @@
 import logging
 import os
 import requests
+import sys
+import graypy
 
 from flask import Flask, request, redirect
 from dotenv import dotenv_values
 
+
+def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    app.logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
 app = Flask(__name__)
 settings = dotenv_values(os.path.join(app.root_path, '.env'))
-logger = logging.getLogger(__name__)
+
+log_method = settings.get("log_method", "file").lower()
+log_level = settings.get("log_level", "info").lower()
+log_levels = {'debug': 10, 'info': 20, 'warning': 30, 'error': 40, 'critical': 50}
+app.logger.setLevel(log_levels.get(log_level, 20))
+sys.excepthook = handle_unhandled_exception
+if log_method == "file":
+    logging.basicConfig(filename=os.path.join(app.root_path, "log", "nextbike_validation"))
+elif log_method == "graylog":
+    graylog_host = settings.get("graylog_host", "127.0.0.1")
+    graylog_port = int(settings.get("graylog_port", 12201))
+    handler = graypy.GELFUDPHandler(graylog_host, graylog_port)
+    app.logger.addHandler(handler)
 
 
 def normalize_idnum(input_contract):
@@ -44,7 +66,7 @@ def openwowi_create_token(base_url, user, password, refresh_token=3600, user_age
 
     if response.status_code != 200:
         errmsg = f"OPEN WOWI Auth Error. Status {response.status_code}:{response.text}"
-        logger.error(errmsg)
+        app.logger.error(errmsg)
         raise ConnectionError(errmsg)
 
     response_json = response.json()
@@ -72,7 +94,7 @@ def openwowi_get_contract(base_url, token, api_key, contract_idnum, user_agent="
         return None
     else:
         errmsg = f"Request error. Code {response.status_code}: {response.text}"
-        logger.error(errmsg)
+        app.logger.error(errmsg)
         raise ConnectionError(errmsg)
 
 
@@ -102,10 +124,10 @@ def validate_request():
         tcontract = openwowi_get_contract(wowi_url, wowi_token, wowi_api_key, contract_idnum, user_agent=user_agent)
 
         if tcontract is not None:
-            logger.info(f"nextbike_access: {contract_idnum} is valid. Caller {request.remote_addr}")
+            app.logger.info(f"nextbike_access: {contract_idnum} is valid. Caller {request.remote_addr}")
             return "valid", 200
         else:
-            logger.info(f"nextbike_access: {contract_idnum} IS INVALID. Caller {request.remote_addr}")
+            app.logger.info(f"nextbike_access: {contract_idnum} IS INVALID. Caller {request.remote_addr}")
             return "contract_not_found", 404
 
 
