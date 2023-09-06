@@ -26,7 +26,7 @@ def normalize_idnum(input_contract):
     return ret_contract
 
 
-def openwowi_create_token(base_url, user, password, refresh_token=3600):
+def openwowi_create_token(base_url, user, password, refresh_token=3600, user_agent="nextbike"):
     url = f"{base_url}/oauth2/token"
 
     payload = f"grant_type=password&" \
@@ -35,6 +35,7 @@ def openwowi_create_token(base_url, user, password, refresh_token=3600):
               f"refresh_token={refresh_token}"
 
     headers = {
+        'User-Agent': user_agent,
         'Accept': 'text/plain',
         'Content-Type': 'application/x-www-form-urlencoded'
     }
@@ -50,13 +51,14 @@ def openwowi_create_token(base_url, user, password, refresh_token=3600):
     return response_json["access_token"]
 
 
-def openwowi_get_contract(base_url, token, api_key, contract_idnum):
+def openwowi_get_contract(base_url, token, api_key, contract_idnum, user_agent="nextbike"):
     url = f"{base_url}/openwowi/v1.2/RentAccounting/LicenseAgreements" \
           f"?apiKey={api_key}" \
           f"&licenseAgreementIdNum={contract_idnum}" \
           f"&limit=1"
 
     headers = {
+        'User-Agent': user_agent,
         'Accept': 'text/plain',
         'Authorization': f'Bearer {token}'
     }
@@ -86,6 +88,9 @@ def validate_request():
     wowi_user = settings.get("openwowi_user")
     wowi_pass = settings.get("openwowi_pass")
     wowi_api_key = settings.get("openwowi_api_key")
+    user_agent = settings.get("user_agent")
+    if user_agent is None or len(user_agent.strip()) == 0:
+        user_agent = "nextbike_validation/1.0"
 
     contract_idnum = request.args.get("contract", "")
     contract_idnum = normalize_idnum(contract_idnum)
@@ -93,8 +98,8 @@ def validate_request():
     if len(contract_idnum) == 0:
         return "Arguments_missing", 400
     else:
-        wowi_token = openwowi_create_token(wowi_url, wowi_user, wowi_pass)
-        tcontract = openwowi_get_contract(wowi_url, wowi_token, wowi_api_key, contract_idnum)
+        wowi_token = openwowi_create_token(wowi_url, wowi_user, wowi_pass, user_agent=user_agent)
+        tcontract = openwowi_get_contract(wowi_url, wowi_token, wowi_api_key, contract_idnum, user_agent=user_agent)
 
         if tcontract is not None:
             logger.info(f"nextbike_access: {contract_idnum} is valid. Caller {request.remote_addr}")
