@@ -116,7 +116,7 @@ def validate_request():
 
     contract_idnum = request.args.get("contract", "")
     contract_idnum = normalize_idnum(contract_idnum)
-    print(contract_idnum)
+
     if len(contract_idnum) == 0:
         return "Arguments_missing", 400
     else:
